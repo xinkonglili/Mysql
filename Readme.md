@@ -291,17 +291,158 @@ here subjectName = '高等数学-2' and StudentResult > 80;
        
 ```
 
-### sql常用函数--select + 函数
+### sql常用函数 ----> select + 函数
 - abs()  //取绝对值
 - ceiling()  //向上取整
 - floor() //向下取整
 - rand() //随机函数，0-1之间
-- sign() //标志函数
-- char length() //字符串长度
-- concat()  //拼接字符串
-- insert() //插入，替换
-- lower() //变小写
-- upper() //变大写
+- sign(num) //判断num的符号，0->0;负数返回-1；正数返回1
+- char length(str) //字符串长度
+- concat(str1,str2,str3)  //拼接字符串
+- insert('str',1,2,str2) //从1位置开始替换掉2个字符，这2个字符使用str2来替换
+- lower(str) //变小写
+- upper(str) //变大写
 - replace(srt1,str1中的某个字符，str被替换的新字符)
 - substr(str,num1,num2) //str是从下标为1开始的，num1下标数，num2要截取的字符串长度
 - reverse(str) //反转字符串
+
+
+### 聚合函数
+- SUM()：```select SUM(`字段名`) as 最高分 from '表名'  ```
+- COUNT():```select COUNT(`字段名`) from '表名'  ```
+   - count('列名'):查询表中的指定的列，然后统计行数，null值自动忽略，会更快，一般就用这个
+   - count('*')：查询表中所有的行，不会忽略null
+   - count(1)：把行变成1之后，统计所有的行数，不会忽略null
+- AVG()：``` select AVG(`字段名`) as 平均分  from '表名'```
+- MAX()：```select MAX(`字段名`) as 最高分 from '表名' ```
+- MIN()：```select MIN(`字段名`) as 最高分 from '表名' ```
+
+
+### MD5加密---------MD5() 加密函数
+```aidl
+CREATE TABLE `testmd5`(
+	`id` INT(4)  not NULL,
+	`name` VARCHAR(100) not NULL,
+	`pwd` VARCHAR(100) not NULL,
+	 PRIMARY KEY (`id`)
+)ENGINE = INNODB DEFAULT CHARSET=UTF8
+
+
+INSERT into testmd5 VALUES(1,'jinli','12345'),(2,'lijin','68543798'),(3,'hah','429749');
+
+// 插入的时候也可以加密
+INSERT into testmd5 VALUES(4,'jinli',MD5('12345'));
+
+update testmd5 SET pwd=MD5(pwd) WHERE id =1; // pwd是表中的字段
+
+update testmd5 SET pwd=MD5(pwd); //MD5() 加密函数
+
+
+///**/ 如何检验：将用户传进来的密码，进行MD5加密，然后对比加密后的值
+SELECT * from `testmd5` where `name` = 'jinli' and `pwd` = MD5('12345');
+
+```
+![img_4.png](img_4.png)
+
+
+
+
+## 事务transaction
+### 1、特性
+- A：atomicity   原子性
+- C: consistency  一致性
+- I：isolation  隔离性；如果被破坏会出现读取结果不一致，读取前后不一致，或者是读了另外一个事务
+- D：durability  持久性
+
+```aidl
+//mysql是默认开启事务提交的
+set autocommit = 1;  //开启的
+set autocommit = 0;  //关闭的
+
+
+//开启事务
+start transaction    //标记一个事务的开始。从这个之后的sql都在一个事务内
+
+insert xx
+insert xx
+
+//提交
+commit  //持久化成功
+
+//回滚
+rollback
+
+//事务结束要开启自动提交
+set autocommit = 1;
+
+//设置保存点
+savepoint
+rollback to savepoint
+
+
+character
+```
+
+步骤：关闭事务自动提交--->开启一个事务--->可能提交/可能回滚---->事务结束之后，开启事务自动提交、
+
+
+
+## 索引：就是帮助mysql高效获取数据的数据结构，索引是数据结构
+### 索引分类
+- 主键索引
+    - 唯一的标识，主键不可重复，只能有一个列作为主键（只能有一个）
+- 唯一索引
+    - 避免重复的列出现，如果列标记为唯一索引，就说明只有一列（主键索引可以有多个）
+- 常规索引
+    - 默认的
+- 全文索引
+  - 在特定的数据引擎下才有，比如myisam
+  - 快速定位数据
+
+
+```aidl
+java
+
+方法(){
+    try(){
+        正常业务代码；
+        commit();
+    
+    }catch(){
+        rollback;
+    }
+}
+```
+
+### 数据库驱动jar包网址:
+```https://mvnrepository.com/artifact/mysql/mysql-connector-java/5.1.47```
+### 连接数据库步骤--->5步
+```aidl
+        //1、加载驱动
+        Class.forName("com.mysql.jdbc.Driver");
+        //2、用户信息和url
+        String url = "jdbc:mysql://localhost:3306/jdbcstudy?useUnicode=true&characterEncoding=utf8&useSSL=false";
+        String name = "root";
+        String password = "jinli666";
+        //3、获取数据库对象------> Connection 代表数据库
+        Connection conn = DriverManager.getConnection(url, name, password);
+        //4、用数据库对象去创建sql对象
+        Statement st = conn.createStatement();
+        //5、用sql对象去执行sql，可能存在结果，查看返回结果
+        String sql ="select * from user";
+        ResultSet rt = st.executeQuery(sql);  //返回的结果集
+        
+        //获取结果集，打印在console，可以不用输出结果集，只要输出提示语句，提示操作成功就可以了
+        while (rt.next()){
+          System.out.println("id= "+rt.getObject("id"));
+          System.out.println("name= "+rt.getObject("name"));
+          System.out.println("password= "+rt.getObject("password"));
+          System.out.println("email= "+rt.getObject("email"));
+        }
+```
+
+## Question
+### 1、Path does not chain with any of the trust anchors
+修改为：
+``` jdbc:mysql://localhost:3306/jdbcstudy?useUnicode=true&characterEncoding=utf8&useSSL=false```
+
